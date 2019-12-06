@@ -11,7 +11,7 @@ import random
 import openpyxl
 import matplotlib.pyplot as plt
 # workbook object is created from file "montecarloparams.xlsx" 
-wb_obj = openpyxl.load_workbook("montecarloparams.xlsx") 
+wb_obj = openpyxl.load_workbook("C:/Users/richa/.spyder-py3/montecarloparams.xlsx") 
 # Get workbook active sheet object, default is first sheet
 sheet_obj = wb_obj.active 
 # Cell objects also have row, column, attributes. Note: The first row or  
@@ -24,66 +24,49 @@ print("Sheet title: ", cell_obj.value)
 # Monte Carlo model for investments - Models account depletion under a set
 # of assumptions.Get input variables from spreadsheet
 #
-cell_obj = sheet_obj.cell(row = 7, column = 2)
-NQ_Assets = cell_obj.value
+NQ_Assets = sheet_obj.cell(row = 7, column = 2).value
 print ("NQ assets (1000): ", NQ_Assets)
 #
-cell_obj = sheet_obj.cell (row = 3, column = 2)
-NQ_Return = cell_obj.value # 40 year avg for bonds is .058
+NQ_Return = sheet_obj.cell (row = 3, column = 2).value # 40 year avg for bonds is .058
 print ("NQ return (%): ", NQ_Return)
 #
-cell_obj = sheet_obj.cell (row = 4, column = 2)
-NQ_Return_Sigma = cell_obj.value# 40 year avg for bonds
+NQ_Return_Sigma = sheet_obj.cell (row = 4, column = 2).value
 print ("NQ std dev (%): ", NQ_Return_Sigma)
 #
-cell_obj = sheet_obj.cell (row = 8, column = 2)
-Q_Assets = cell_obj.value
+NQ_Asets = sheet_obj.cell (row = 8, column = 2).value
 print ("Q assets: ", Q_Assets)
 #
-cell_obj = sheet_obj.cell (row = 5, column = 2) # 40 year avg for stocks
-Q_Return = cell_obj.value
+Q_Return = sheet_obj.cell (row = 5, column = 2).value # 40 year avg for stocks is 7%
 print ("Q return (%): ", Q_Return)
 #
-cell_obj = sheet_obj.cell (row = 6, column = 2)
-Q_Return_Sigma = cell_obj.value # 40 year avg for stocks
+Q_Return_Sigma = sheet_obj.cell (row = 6, column = 2).value # 40 year avg for stocks is 12%
 print("Q std dev (%): ", Q_Return_Sigma)
 #
-cell_obj = sheet_obj.cell (row = 15, column = 2)
-years = cell_obj.value # How many years per cycle
+years = sheet_obj.cell (row = 15, column = 2).value # How many years
 print("Years: ", years)
 #
-cell_obj = sheet_obj.cell (row = 16, column = 2)
-cycles = cell_obj.value # how many model samples
+cycles = sheet_obj.cell (row = 16, column = 2).value # how many model iterations
 print ("Monte Carlo iterations: ", cycles)
 #
-cell_obj = sheet_obj.cell (row = 11, column = 2)
-Net_SS = cell_obj.value
+Net_SS = sheet_obj.cell (row = 11, column = 2).value
 print("Net Social Security: ", Net_SS)
 #
-cell_obj = sheet_obj.cell (row = 17, column = 2)
-Net_Annuities = cell_obj.value  # NQ annuities
+Net_Annuities = sheet_obj.cell (row = 17, column = 2).value # NQ annuities
 print("Net NQ Annuities: ", Net_Annuities)
 #
-cell_obj = sheet_obj.cell (row = 12, column = 2)
-RMD = cell_obj.value # Qual annuity plus additional $43K
+RMD = sheet_obj.cell (row = 12, column = 2).value # Qual annuity plus additional $43K
 print("RMD: ", RMD)
 #
-cell_obj = sheet_obj.cell (row = 13, column = 2)
-Net_RMD = cell_obj.value # conservative st - 15% avg tax rate
+Net_RMD = sheet_obj.cell (row = 13, column = 2).value # conservative st - 15% avg tax rate
 print("Net RMD: ", Net_RMD)
 #
-cell_obj = sheet_obj.cell (row = 9, column = 2)
-Annual_Required = cell_obj.value
+Annual_Required = sheet_obj.cell (row = 9, column = 2).value
 print("Annual budget: ", Annual_Required)
 #
-# Annual changes - 1% SS COLA, 2.5% inflation
-#
-cell_obj = sheet_obj.cell (row = 14, column = 2)
-SS_Cola = cell_obj.value
+SS_Cola = sheet_obj.cell (row = 14, column = 2).value
 print("Soc Sec COLA: ", SS_Cola)
 #
-cell_obj = sheet_obj.cell (row = 10, column = 2)
-Inflation = cell_obj.value
+Inflation = sheet_obj.cell (row = 10, column = 2).value
 print("Annual inflation: ", Inflation)
 #
 # Main logic loop - cycles is number of times to run N-year simulation,
@@ -100,37 +83,44 @@ for cycle in range (1, cycles+1):
         #
         # Non qual assets
         #
-        t_NQ_return = random.gauss(mu = NQ_Return, sigma = NQ_Return_Sigma) 
-        NQ_Earnings = t_NQ_Assets * t_NQ_return *.95 #assumes  NQ$ are F tax free
-        Total_Income = NQ_Earnings + t_Net_SS + Net_Annuities + Net_RMD
-        Shortfall = t_Annual_Required - Total_Income
-        t_NQ_Assets = t_NQ_Assets - Shortfall
-        #
-        # now qual assets - when NQ assets are depleted, the negative balance carries
-        # through to the total asset calculation
-        #
+        if (t_NQ_Assets > 0):
+            t_NQ_return = random.gauss(mu = NQ_Return, sigma = NQ_Return_Sigma) 
+            NQ_Earnings = t_NQ_Assets * t_NQ_return *.95 #assumes  NQ$ are F tax free
+            Total_Income = NQ_Earnings + t_Net_SS + Net_Annuities + Net_RMD
+            Shortfall = t_Annual_Required - Total_Income
+            t_NQ_Assets = t_NQ_Assets - Shortfall
+        else:
+            # NQ assets have run out, set to 0 for later test, error dhould be minor
+            t_NQ_Assets = 0
         t_Q_Return = random.gauss(mu = Q_Return, sigma = Q_Return_Sigma)       
         t_Q_Earnings = (t_Q_Assets * t_Q_Return)
-        t_Q_Assets = t_Q_Assets + t_Q_Earnings - RMD
+        #
+        # now qual assets - when NQ assets are depleted, required income is
+        # taken from Q assets
+        #
+        if (t_NQ_Assets == 0): # need additional Q withdrawal to compensate for zero NQ assets
+            Total_Income = t_Q_Earnings + t_Net_SS + Net_Annuities + Net_RMD
+            Shortfall = t_Annual_Required - Total_Income
+            t_NQ_Assets = t_NQ_Assets - Shortfall
+        else:  # Qual assets continue to accumulate  
+            t_Q_Assets = t_Q_Assets + t_Q_Earnings - RMD
         #
         # print ("Yr:%2d R:%5.3f NQ:%5.2f TI: %5.2f TNQ: %6.1f TQ: %6.1f" % (year, t_NQ_return, NQ_Earnings, Total_Income, t_NQ_Assets, t_Q_Assets))
         # increment annual requirements, COLA adjustments, etc
         #
         t_Annual_Required = t_Annual_Required * (1 + Inflation)
         t_Net_SS = t_Net_SS * (1 + SS_Cola)
-        Tot_Assets = t_NQ_Assets + t_Q_Assets
+    Tot_Assets = t_NQ_Assets + t_Q_Assets
     Results.append(Tot_Assets)
-#    if cycle % 100 == 0: # show completion of every 100 steps
-#        print ("end cycle:", cycle)
+
 print ("Completed ", cycles, "Monte Carlo Simulations")
 #
 # plot results
 #        
-num_bins = 50
+num_bins = 100
 n, bins, patches = plt.hist(Results, num_bins, facecolor='blue', alpha=0.5, label= "Frequency")
 plt.grid(True)
 plt.legend(loc='best')
 plt.xlabel("Assets At End Of Simulation (1000s)")
-plt.show() 
-
+plt.show()
 
