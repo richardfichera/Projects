@@ -5,9 +5,9 @@
 #
 # Define RMD_calc function - takes RMD schedules and assets, returns RMD
 #
-# import numpy as np
 import random
-# import openpyxl
+from tkinter import *
+import openpyxl
 import matplotlib.pyplot as plt
 
 
@@ -17,7 +17,7 @@ def RMD_calc(year, t_NQ_Assets):
     rmf_RMD_sched = [1000000, 100000, 27.4, 26.5, 25.6, 24.7, 23.8, 22.9, 22, 21.2, 20.3, 19.5,
                      18.7, 17.9, 17.1, 16.3, 15.5, 14.8, 14.1, 13.4, 12.7, 12, 11.4, 10.8, 10.2, 9.6]
     jr_RMD_sched = [1000000, 100000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 27.4
-        , 26.5, 25.6, 24.7, 23.8, 22.9, 22, 21.2, 20.3, 19.5,
+                    , 26.5, 25.6, 24.7, 23.8, 22.9, 22, 21.2, 20.3, 19.5,
                     18.7, 17.9, 17.1, 16.3, 15.5, 14.8, 14.1]
     rmf_RMD = t_NQ_Assets * (1 / rmf_RMD_sched[year - 1]) * .75  # adjust for RF assets ~ 75% of total
     jr_RMD = t_NQ_Assets * (1 / jr_RMD_sched[year - 1]) * .25  # adjust for JR assets ~ 25% of total
@@ -25,48 +25,221 @@ def RMD_calc(year, t_NQ_Assets):
     RMD = jr_RMD + rmf_RMD
     return RMD  # end of RMD_calc
 
+def xls_get_input():
+    # workbook object is created from file "montecarloparams.xlsx"
+    wb_obj = openpyxl.load_workbook("C:/Users/richa/Downloads/montecarloparams.xlsx")
+    # Get workbook active sheet object, default is first sheet
+    sheet_obj = wb_obj.active
+    # Cell objects also have row, column, attributes. Note: The first row or
+    # column integer is 1, not 0. Cell object is created by using
+    # sheet object's cell obj and sheet_obj methods.
+    cell_obj = sheet_obj.cell(row=1, column=1)
+    # Print title in cell A1 to verify
+    print("Sheet title: ", cell_obj.value)
+    #
+    # Input for Monte Carlo investment model - models account depletion under a set
+    # of assumptions.Get input variables from spreadsheet
+    #
+    NQ_Assets = sheet_obj.cell(row=7, column=2).value
+    print("NQ assets (1000): ", NQ_Assets)
+    #
+    NQ_Return = sheet_obj.cell(row=3, column=2).value  # 40 year avg for bonds is .058
+    print("NQ return (%): ", NQ_Return)
+    #
+    NQ_Return_Sigma = sheet_obj.cell(row=4, column=2).value
+    print("NQ std dev (%): ", NQ_Return_Sigma)
+    #
+    Q_Assets = sheet_obj.cell(row=8, column=2).value
+    print("Q assets: ", Q_Assets)
+    #
+    Q_Return = sheet_obj.cell(row=5, column=2).value  # 40 year avg for stocks is 7%
+    print("Q return (%): ", Q_Return)
+    #
+    Q_Return_Sigma = sheet_obj.cell(row=6, column=2).value  # 40 year avg for stocks is 12%
+    print("Q std dev (%): ", Q_Return_Sigma)
+    #
+    years = sheet_obj.cell(row=15, column=2).value  # How many years
+    print("Years: ", years)
+    #
+    cycles = sheet_obj.cell(row=16, column=2).value  # how many model iterations
+    print("Monte Carlo iterations: ", cycles)
+    #
+    Net_SS = sheet_obj.cell(row=11, column=2).value
+    print("Net Social Security: ", Net_SS)
+    #
+    Net_Annuities = sheet_obj.cell(row=17, column=2).value  # NQ annuities
+    print("Net NQ Annuities: ", Net_Annuities)
+    #
+    #RMD = sheet_obj.cell(row=12, column=2).value  # Qual annuity plus additional $43K
+    #print("RMD: ", RMD) # Not passing RMD as parameter, fix spreadsheet later
+    #
+    Annual_Required = sheet_obj.cell(row=9, column=2).value
+    print("Annual budget: ", Annual_Required)
+    #
+    SS_Cola = sheet_obj.cell(row=14, column=2).value
+    print("Soc Sec COLA: ", SS_Cola)
+    #
+    Inflation = sheet_obj.cell(row=10, column=2).value
+    print("Annual inflation: ", Inflation)
+    #
+    RMD_Tax_Rate = sheet_obj.cell(row=18, column=2).value
+    print("RMD Tax Rate: ", RMD_Tax_Rate)
+    return (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
+            Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
+            RMD_Tax_Rate) # end of spreadsheet input
 
-#
-# Main program - start with input variables
-#
-def get_input():
+def std_get_input():
+    # Get inout variables, some hard-coded, some from console
     Annual_Required = float(input("Desired annual after-tax income:"))
     NQ_Assets = float(input("NQ investment assets (1000s):"))
     NQ_Return = .058  # 40 year avg for bonds is .058,use this for whole NQ portfolio for conservative bias
     NQ_Return_Sigma = .06  # 40 year avg for bonds is 3% , double for mixed portfolio
     Q_Assets = float(input("Q investment assets (1000s):"))
     Q_Return = .07  # 40 year avg for stocks is 7%
-    Q_Return_Sigma = .12  # 40 year avg for stocks is 12%
+    Q_Return_Sigma = .12
+    # 40 year avg for stocks is 12%
     years = int(input("How many years:"))  # How many years per cycle
     if years > 25:
         print('Maximum 25 years, setting to 25 years')
         years = 25
     cycles = int(input("How many Monte Carlo iterations?:"))  # how many model samples
-    Net_SS = 41.5
+    Net_SS = 39
     Net_Annuities = 9.8  # NQ annuities
     SS_Cola = .01
     Inflation = .025
-    RMD_Tax_Rate = .015
+    RMD_Tax_Rate = .15
     # Add all vars here...
     return (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
             Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
-            RMD_Tax_Rate)
-
-
+            RMD_Tax_Rate) # end of console + hard-coded input
 #
 # Main logic loop - cycles is number of times to run N-year simulation,
 # accumulating a new final asset value at the end of each cycle
 #
-Results = []  # empty list to hold results of each cycle for later
-ZeroYear = []  # empty list to collect years that NQ assets are exhausted
-Annual_Req_Adjust = [1.0, 1.0, 1.0, 1.0, 1.0, .95, .95, .95, .95, .95, .90, .90, .90, .90, .90,
-                    .90, .90, .90, .90, .90, 1.0, 1.0, 1.0, 1.0, 1.0] # adjust required spend for age, then for extra help
+def tkinter_window_test():
+    root = Tk()
+#    theLabel = Label(root, text="This is a test window")
+#    theLabel.pack()
 
-#
+    topFrame = Frame(root)
+    topFrame.pack()
+    bottomFrame = Frame(root)
+#    bottomFrame.pack(side=BOTTOM)
+#   button1 = Button(topFrame, text='First', fg=('red'))
+#    button2 = Button(topFrame, text='Second', fg=('blue'))
+#   button3 = Button(topFrame, text='Third', fg=('green'))
+#    button4 = Button(bottomFrame, text='Fourth', fg=('purple'))
+
+#    button1.pack(side=LEFT)
+#    button2.pack(side=RIGHT)
+#    button3.pack()
+#    button4.pack()
+
+    Annual_Req = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=90, to=250, label='Annual Required', orient=HORIZONTAL)
+    Annual_Req.set(168)
+    Annual_Req.pack()
+
+    NQ_Ass = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=900, to=2000, label='NQ Assets', orient=HORIZONTAL)
+    NQ_Ass.set(1500)
+    NQ_Ass.pack()
+
+    Q_Ass = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=900, to=2000, label='Q Assets', orient=HORIZONTAL)
+    Q_Ass.set(1500)
+    Q_Ass.pack()
+
+    yrs = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=20, to=30, label='Years', orient=HORIZONTAL)
+    yrs.set(25)
+    yrs.pack()
+
+    cyc = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=1000, to=10000, label='Model cycles', orient=HORIZONTAL)
+    cyc.set(1000)
+    cyc.pack()
+
+    NQ_Ret = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=100, label='NQ Return (1/10s)', orient=HORIZONTAL)
+    NQ_Ret.set(55)
+    NQ_Ret.pack()
+
+    NQ_Ret_Sig = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=100, label='NQ Return Sigma (1/10s)', orient=HORIZONTAL)
+    NQ_Ret_Sig.set(60)
+    NQ_Ret_Sig.pack()
+
+    Q_Ret = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=100, label='Q Return (1/10s)', orient=HORIZONTAL)
+    Q_Ret.set(67)
+    Q_Ret.pack()
+
+    Q_Ret_Sig = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=90, to=200, label='Q Return Sigma (1/10s)', orient=HORIZONTAL)
+    Q_Ret_Sig.set(120)
+    Q_Ret_Sig.pack()
+
+    N_SS = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=30, to=40, label='Net Social Security (1000s)', orient=HORIZONTAL)
+    N_SS.set(39)
+    N_SS.pack()
+
+    N_Annuit = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=8, to=12, label='Net NQ Annuities (1000s)', orient=HORIZONTAL)
+    N_Annuit.set(10)
+    N_Annuit.pack()
+
+    Infl = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=30, to=40, label='Inflation (1/10s)', orient=HORIZONTAL)
+    Infl.set(20)
+    Infl.pack()
+
+    Button(root, text='Submit', command=root.quit).pack()
+    mainloop()
+
+    SS_Cola = .01
+    RMD_Tax_Rate = .15
+    Annual_Required = float(Annual_Req.get())
+    print(Annual_Required)
+    NQ_Assets = float(NQ_Ass.get())
+    print(NQ_Assets)
+    NQ_Return = float(NQ_Ret.get())/1000.0
+    print(NQ_Return)
+    NQ_Return_Sigma = float(NQ_Ret_Sig.get())/1000.0
+    print(NQ_Return_Sigma)
+    Q_Assets = float(Q_Ass.get())
+    print(Q_Assets)
+    Q_Return = float(Q_Ret.get())/1000.0
+    print(Q_Return)
+    Q_Return_Sigma = float(Q_Ret_Sig.get())/1000.0
+    print(Q_Return_Sigma)
+    years = int(yrs.get())
+    print(years)
+    cycles = int(cyc.get())
+    print(cycles)
+    Net_SS = float(N_SS.get())
+    Net_Annuities = float (N_Annuit.get())
+    print(Net_Annuities)
+    Inflation = float(Infl.get())/1000.0
+    print(Inflation)
+
+    return (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
+    Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
+    RMD_Tax_Rate)
+
 def main():
-    (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
-     Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
-     RMD_Tax_Rate) = get_input()
+    Results = []  # empty list to hold results of each cycle for later
+    ZeroYear = []  # empty list to collect years that NQ assets are exhausted
+    Annual_Req_Adjust = [1.0, 1.0, 1.0, 1.0, 1.0, .95, .95, .95, .95, .95, .90, .90, .90, .90, .90,
+                         .90, .90, .90, .90, .90, 1.0, 1.0, 1.0, 1.0,
+                         1.0]  # adjust required spend for age, then for extra help
+    Param_Source = input("Use GUI(G), XLS(X) or Console(C) for input:")
+    if Param_Source == "X":
+        (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
+         Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
+         RMD_Tax_Rate) = xls_get_input()
+    elif Param_Source == 'C':
+        (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
+         Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
+         RMD_Tax_Rate) = std_get_input()
+    elif Param_Source == 'G':
+         (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
+         Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
+         RMD_Tax_Rate) = tkinter_window_test()
+    else: # input error, default to console
+        print('Input source error, defaulting to console input')
+        (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
+         Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
+         RMD_Tax_Rate) = std_get_input()
     for cycle in range(1, cycles):
         # setup/restore initial conditions for next Monte Carlo iteration
         t_NQ_Assets = NQ_Assets
@@ -105,7 +278,7 @@ def main():
             #
             t_Q_Return = random.gauss(mu=Q_Return, sigma=Q_Return_Sigma)
             t_Q_Earnings = (t_Q_Assets * t_Q_Return)
-            RMD = RMD_calc(year, t_NQ_Assets)
+            RMD = RMD_calc(year, t_Q_Assets)
             Net_RMD = RMD * (1 - RMD_Tax_Rate)  # adjust for tax
             # now see if we are taaking required income out of Qual funds
             if (t_NQ_Assets == 0):  # take additional Q expenses to compensate for zero NQ assets
@@ -118,29 +291,40 @@ def main():
             # print ("Yr:%2d R:%5.3f NQ:%5.2f TI: %5.2f TNQ: %6.1f TQ: %6.1f" % (year, t_NQ_return, NQ_Earnings, Total_Income, t_NQ_Assets, t_Q_Assets))
             # increment annual requirements, COLA adjustments, etc
             #
-            t_Annual_Required = t_Annual_Required * (1 + Inflation) * Annual_Req_Adjust [year-1]
+            t_Annual_Required = t_Annual_Required * (1 + Inflation) * Annual_Req_Adjust[year - 1]
             t_Net_SS = t_Net_SS * (1 + SS_Cola)
         # grab total assets at end of each cycle and accumulate
         Tot_Assets = t_Q_Assets + t_NQ_Assets  # tot = Q + NQ
         Results.append(Tot_Assets)
         #
-    print("Completed ", cycles, "Monte Carlo Simulations")
+    print("Completed ", cycle+1, "Monte Carlo Simulations")
     #
     # plot results
+    # original, ugly but works
+    #num_bins = 100
+    #plt.grid(True)
+    #n, bins, patches = plt.hist(Results, num_bins, facecolor='blue', alpha=0.5, label="Frequency")
+    #plt.xlabel("Assets At End Of Simulation (1000s)")
+    #plt.legend(loc='best')
+    #plt.show()
+    #n, bins, patches = plt.hist(ZeroYear, num_bins, facecolor='blue', alpha=0.5, label="Frequency")
+    #plt.xlabel("Year NQ Assets Exhausted")
+    #plt.grid(True)
+    #plt.legend()
+    #plt.show()
+    #
+    # mods
     #
     num_bins = 100
-    plt.grid(True)
-    plt.legend(loc='best')
-    n, bins, patches = plt.hist(Results, num_bins, facecolor='blue', alpha=0.5, label="Frequency")
-    plt.xlabel("Assets At End Of Simulation (1000s)")
-    plt.legend()
+    #plt.grid(True)
+    # create multiple plots via plt.subplots(rows,columns)
+    fig, axes = plt.subplots(2)
+    # one plot on each subplot
+    axes[0].hist(Results, num_bins, facecolor='blue', alpha=0.5, label="Frequency")
+    axes[1].hist(ZeroYear, num_bins, facecolor='blue', alpha=0.5, label="Frequency")
+    axes[0].legend(['Final Value'])
+    axes[1].legend(['Year NQ Assets Exhausted'])
     plt.show()
-    n, bins, patches = plt.hist(ZeroYear, num_bins, facecolor='blue', alpha=0.5, label="Frequency")
-    plt.xlabel("Year NQ Assets Exhausted")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
 
 if __name__ == '__main__':
     main()
