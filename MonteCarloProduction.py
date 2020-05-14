@@ -106,16 +106,13 @@ def std_get_input():
     Net_SS = 39
     Net_Annuities = 9.8  # NQ annuities
     SS_Cola = .01
-    Inflation = .025
+    Inflation = .02
     RMD_Tax_Rate = .15
     # Add all vars here...
     return (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
             Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
             RMD_Tax_Rate) # end of console + hard-coded input
-#
-# Main logic loop - cycles is number of times to run N-year simulation,
-# accumulating a new final asset value at the end of each cycle
-#
+
 def tkinter_window_test():
     root = Tk()
     root.lift()
@@ -143,20 +140,20 @@ def tkinter_window_test():
     cyc.set(1000)
     cyc.grid(row=1, column=2)
 
-    NQ_Ret = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=100, label='NQ Return (1/10s)', orient=HORIZONTAL, bg='#CCC')
-    NQ_Ret.set(55)
+    NQ_Ret = Scale(root, resolution=.1, activebackground='green', relief=GROOVE, length=200, from_=1.0, to=10.0, label='NQ Return (%)', orient=HORIZONTAL, bg='#CCC')
+    NQ_Ret.set(5.5)
     NQ_Ret.grid(row=2, column=1)
 
-    NQ_Ret_Sig = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=100, label='NQ Return Sigma (1/10s)', orient=HORIZONTAL, bg='#CCC')
-    NQ_Ret_Sig.set(60)
+    NQ_Ret_Sig = Scale(root, resolution=.1, activebackground='green', relief=GROOVE, length=200, from_=1.0, to=10.0, label='NQ Return Sigma (%)', orient=HORIZONTAL, bg='#CCC')
+    NQ_Ret_Sig.set(6.0)
     NQ_Ret_Sig.grid(row=2, column=2)
 
-    Q_Ret = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=100, label='Q Return (1/10s)', orient=HORIZONTAL, bg='#CCC')
-    Q_Ret.set(67)
+    Q_Ret = Scale(root, resolution=.1, activebackground='green', relief=GROOVE, length=200, from_=1.0, to=10.0, label='Q Return (%)', orient=HORIZONTAL, bg='#CCC')
+    Q_Ret.set(6.7)
     Q_Ret.grid(row=3, column=1)
 
-    Q_Ret_Sig = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=90, to=200, label='Q Return Sigma (1/10s)', orient=HORIZONTAL, bg='#CCC')
-    Q_Ret_Sig.set(120)
+    Q_Ret_Sig = Scale(root, resolution=.1, activebackground='green', relief=GROOVE, length=200, from_=9.0, to=20.0, label='Q Return Sigma (%)', orient=HORIZONTAL, bg='#CCC')
+    Q_Ret_Sig.set(12.0)
     Q_Ret_Sig.grid(row=3, column=2)
 
     N_SS = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=30, to=40, label='Net Social Security (1000s)', orient=HORIZONTAL, bg='#CCC')
@@ -171,18 +168,18 @@ def tkinter_window_test():
     RMD_Tax.set(15)
     RMD_Tax.grid(row=4, column=2)
 
-    Infl = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=10, to=40, label='Inflation (1/10s)', orient=HORIZONTAL, bg='#CCC')
-    Infl.set(20)
+    Infl = Scale(root, resolution=.1, activebackground='green', relief=GROOVE, length=200, from_=1.0, to=10.0, label='Inflation (%)', orient=HORIZONTAL, bg='#CCC')
+    Infl.set(2.0)
     Infl.grid(row=5,column=1)
 
-    S_Cola = Scale(root, activebackground='green', relief=GROOVE, length=200, from_=5, to=15, label='SS COLA (1/10s)', orient=HORIZONTAL, bg='#CCC')
-    S_Cola.set(10)
+    S_Cola = Scale(root, resolution=.1, activebackground='green', relief=GROOVE, length=200, from_=.5, to=2.0, label='SS COLA (%)', orient=HORIZONTAL, bg='#CCC')
+    S_Cola.set(1.0)
     S_Cola.grid(row=5, column=0)
 
     Button(root, text='Submit', command=root.quit, bg='#CCC', activebackground='green').grid(row=7, column=1)
     mainloop()
 
-    SS_Cola = float(S_Cola.get())/1000.0
+    SS_Cola = float(S_Cola.get())/100.0
     print(SS_Cola)
     RMD_Tax_Rate = float(RMD_Tax.get())/100.0
     print(RMD_Tax_Rate)
@@ -190,15 +187,15 @@ def tkinter_window_test():
     print(Annual_Required) #print statements here for debug
     NQ_Assets = float(NQ_Ass.get())
     print(NQ_Assets)
-    NQ_Return = float(NQ_Ret.get())/1000.0
+    NQ_Return = float(NQ_Ret.get())/100.0
     print(NQ_Return)
-    NQ_Return_Sigma = float(NQ_Ret_Sig.get())/1000.0
+    NQ_Return_Sigma = float(NQ_Ret_Sig.get())/100.0
     print(NQ_Return_Sigma)
     Q_Assets = float(Q_Ass.get())
     print(Q_Assets)
-    Q_Return = float(Q_Ret.get())/1000.0
+    Q_Return = float(Q_Ret.get())/100.0
     print(Q_Return)
-    Q_Return_Sigma = float(Q_Ret_Sig.get())/1000.0
+    Q_Return_Sigma = float(Q_Ret_Sig.get())/100.0
     print(Q_Return_Sigma)
     years = int(yrs.get())
     print(years)
@@ -207,8 +204,15 @@ def tkinter_window_test():
     Net_SS = float(N_SS.get())
     Net_Annuities = float (N_Annuit.get())
     print(Net_Annuities)
-    Inflation = float(Infl.get())/1000.0
-    print(Inflation)
+    Inflation = float(Infl.get())/100.0
+    print(type(Q_Return))
+    print('Scaled Q_Return =', Q_Return)
+    print(type(NQ_Return_Sigma))
+    print('Scaled NQ_Return_Sigma', NQ_Return_Sigma)
+    print(type(Q_Return_Sigma))
+    print('Scaled NQ Return', NQ_Return)
+    print(type(Inflation))
+    print('Scaled inflation = ', Inflation)
 
     return (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
     Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
@@ -239,6 +243,10 @@ def main():
         (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
          Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
          RMD_Tax_Rate) = std_get_input()
+    #
+    # Main logic loop - cycles is number of times to run N-year simulation,
+    # accumulating a new final asset value at the end of each cycle
+    #
     for cycle in range(1, cycles):
         # setup/restore initial conditions for next Monte Carlo iteration
         t_NQ_Assets = NQ_Assets
@@ -248,7 +256,7 @@ def main():
         zero_flag = False
         for year in range(1, years):
             #
-            # Non qual assets
+            # Deplete non-qualified assets first
             #
             if (t_NQ_Assets > 0):  # check to see if there are any NQ assets left
                 t_NQ_return = random.gauss(mu=NQ_Return, sigma=NQ_Return_Sigma)
