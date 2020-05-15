@@ -115,10 +115,10 @@ def std_get_input():
 
 def tkinter_window_test():
     root = Tk()
-    root.lift()
+    root.attributes('-topmost', True)
 
-    title = Label(root, text='Monte Carlo Simulation Data Entry', font=("Helvetica", 16), bg='#909', fg='white', height=3, padx=100, pady=10)
-    title.grid(row=0, column=1)
+    title = Label(root, text='Monte Carlo Simulation Data Entry', font=("Helvetica", 16), bg='#909', fg='white', height=2, padx=100, pady=10)
+    title.grid(row=0, column=0, columnspan=3)
 
     Annual_Req = Scale(activebackground='green', relief=GROOVE, length=200, from_=90, to=250, label='Annual Required', orient=HORIZONTAL, bg='#CCC')
     Annual_Req.set(168)
@@ -213,7 +213,7 @@ def tkinter_window_test():
     print('Scaled NQ Return', NQ_Return)
     print(type(Inflation))
     print('Scaled inflation = ', Inflation)
-
+    root.attributes('-topmost', False)
     return (Annual_Required, NQ_Assets, NQ_Return, NQ_Return_Sigma, Q_Assets,
     Q_Return, Q_Return_Sigma, years, cycles, Net_SS, Net_Annuities, SS_Cola, Inflation,
     RMD_Tax_Rate)
