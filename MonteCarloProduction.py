@@ -52,7 +52,7 @@ def RMD_calc(year, t_NQ_Assets):
     else:
         rmf_RMD = t_NQ_Assets * (1 / rmf_RMD_sched[year-1]) * .75  # adjust for RF assets ~ 75% of total
     if jr_RMD_sched[year-1] == 0:
-        jr_RMD_sched = 0.0
+        jr_RMD = 0.0
     else:
         jr_RMD = t_NQ_Assets * (1 / jr_RMD_sched[year-1]) * .25  # adjust for JR assets ~ 25% of total
     # print(rmf_RMD, jr_RMD)
